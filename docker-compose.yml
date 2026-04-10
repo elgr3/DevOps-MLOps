@@ -1,0 +1,79 @@
+services:
+  database:
+    build: ./postgres
+    container_name: postgres-container
+    restart: unless-stopped                    # Redémarre auto sauf arrêt volontaire
+    networks:
+      - db-network
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    env_file: .env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-usr} -d ${POSTGRES_DB:-db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s                        #  Laisse le temps à Postgres de s'initialiser
+    # Limite les ressources pour éviter qu'une BDD mange tout
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+          cpus: "0.5"
+
+  backend:
+    build: ./simpleapi/simpleapi
+    container_name: backend
+    restart: unless-stopped
+    networks:
+      - wb-network
+      - db-network
+    depends_on:
+      database:
+        condition: service_healthy
+    env_file: .env
+    # Healthcheck sur le backend 
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]   
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    
+
+  httpd:
+    build: ./httpd
+    container_name: httpd-server
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    networks:
+      - wb-network
+    # Dépend que le backend soit SAIN, pas juste démarré
+    depends_on:
+      backend:
+        condition: service_healthy
+    # Logs en JSON pour faciliter l'intégration avec un log aggregator
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+          cpus: "0.25"
+
+networks:
+  db-network:
+    driver: bridge
+    # Isole le réseau (pas de communication externe non sollicitée)
+    #internal: false    # Passe à true si httpd n'a pas besoin d'accès internet
+  wb-network:
+    driver: bridge
+  
+volumes:
+  postgres-data:
+    # Driver explicite pour rendre la config portable
+    driver: local
