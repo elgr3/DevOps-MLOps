@@ -20,8 +20,8 @@ jobs:
           distribution: 'temurin'
 
       - name: Build and test with Maven
-        run: mvn -B verify sonar:sonar -Dsonar.projectKey=elgr3 -Dsonar.organization="Dama Brayan" -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }} --file ./simpleapi/simpleapi/pom.xml
-
+        run: mvn -B verify sonar:sonar -Dsonar.projectKey=elgr3 -Dsonar.organization=dama-brayan-org -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }} --file ./simpleapi/simpleapi/pom.xml
+        #run: mvn -B verify sonar:sonar -Dsonar.projectKey=elgr3 -Dsonar.organization="Dama Brayan" -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }} --file ./simpleapi/simpleapi/pom.xml
   build-and-push-docker-image:
     needs: test-backend
     runs-on: ubuntu-24.04
