@@ -20,11 +20,11 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
-          # Cache Maven pour ne pas retélécharger les JAR à chaque fois
+          # evite le retlechargement des jar
           cache: 'maven'
 
       - name: Build and test with Maven
-        # Utilisation de la clé d'organisation elgr3 validée précédemment
+        
         run: mvn -B verify sonar:sonar -Dsonar.projectKey=elgr3 -Dsonar.organization=elgr3 -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }} --file ./simpleapi/simpleapi/pom.xml
 
   # JOB 2 : Build et Push Backend (Parallèle)
@@ -39,7 +39,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./simpleapi/simpleapi
-          # Tracabilité :  Double Tag (latest + SHA du commit pour la traçabilité)
+          # Tracabilité :  Double Tag
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-backend:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-backend:${{ github.sha }}

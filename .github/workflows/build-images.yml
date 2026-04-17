@@ -1,0 +1,27 @@
+name: Build and Push Images
+on:
+  workflow_run:
+    workflows: ["Test Backend"] # Doit correspondre au 'name' du premier fichier
+    types:
+      - completed
+
+jobs:
+  build-and-push:
+    # Condition : seulement si le workflow précédent a réussi ET que nous sommes sur master
+    if: ${{ github.event.workflow_run.conclusion == 'success' && (github.event.workflow_run.head_branch == 'master' || github.event.workflow_run.head_branch == 'tp-docker') }}
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        component: [backend, database, httpd] # Optimisation ultime : un seul job qui boucle
+    
+    steps:
+      - uses: actions/checkout@v4
+      - name: Login to DockerHub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+      
+      - name: Build and push ${{ matrix.component }}
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.component == 'backend' && './simpleapi/simpleapi' || matrix.component == 'database' && './postgres' || './httpd' }}
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-${{ matrix.component }}:latest
