@@ -8,7 +8,7 @@ on:
   pull_request:
 
 jobs:
-  # Job 1 : Tests et Analyse Qualité
+  # JOB 1 : Test et Analyse Qualité (avec optimisation Cache)
   test-backend:
     runs-on: ubuntu-24.04
     steps:
@@ -20,11 +20,14 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
+          # Cache Maven pour ne pas retélécharger les JAR à chaque fois
+          cache: 'maven'
 
       - name: Build and test with Maven
+        # Utilisation de la clé d'organisation elgr3 validée précédemment
         run: mvn -B verify sonar:sonar -Dsonar.projectKey=elgr3 -Dsonar.organization=elgr3 -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }} --file ./simpleapi/simpleapi/pom.xml
 
-  # Job 2 : Image Backend (parallèle)
+  # JOB 2 : Build et Push Backend (Parallèle)
   build-push-backend:
     needs: test-backend
     runs-on: ubuntu-24.04
@@ -36,10 +39,13 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./simpleapi/simpleapi
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-backend:latest
-          push: ${{ github.ref == 'refs/heads/tp-docker' }}
+          # Tracabilité :  Double Tag (latest + SHA du commit pour la traçabilité)
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-backend:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-backend:${{ github.sha }}
+          push: ${{ github.ref == 'refs/heads/tp-docker' || github.ref == 'refs/heads/master' }}
 
-  # Job 3 : Image Database (parallèle)
+  # JOB 3 : Build et Push Database (Parallèle)
   build-push-database:
     needs: test-backend
     runs-on: ubuntu-24.04
@@ -52,9 +58,9 @@ jobs:
         with:
           context: ./postgres
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-database:latest
-          push: ${{ github.ref == 'refs/heads/tp-docker' }}
+          push: ${{ github.ref == 'refs/heads/tp-docker' || github.ref == 'refs/heads/master' }}
 
-  # Job 4 : Image HTTPD (parallèle)
+  # JOB 4 : Build et Push HTTPD (Parallèle)
   build-push-httpd:
     needs: test-backend
     runs-on: ubuntu-24.04
@@ -67,4 +73,4 @@ jobs:
         with:
           context: ./httpd
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-httpd:latest
-          push: ${{ github.ref == 'refs/heads/tp-docker' }}
+          push: ${{ github.ref == 'refs/heads/tp-docker' || github.ref == 'refs/heads/master' }}
