@@ -2,13 +2,13 @@ name: CI devops 2025
 
 on:
   push:
-
     branches:
       - tp-docker
       - master
   pull_request:
 
 jobs:
+  # Job 1 : Tests et Analyse Qualité
   test-backend:
     runs-on: ubuntu-24.04
     steps:
@@ -23,32 +23,46 @@ jobs:
 
       - name: Build and test with Maven
         run: mvn -B verify sonar:sonar -Dsonar.projectKey=elgr3 -Dsonar.organization=elgr3 -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }} --file ./simpleapi/simpleapi/pom.xml
-        #run: mvn -B verify sonar:sonar -Dsonar.projectKey=elgr3 -Dsonar.organization="Dama Brayan" -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }} --file ./simpleapi/simpleapi/pom.xml
-  build-and-push-docker-image:
+
+  # Job 2 : Image Backend (parallèle)
+  build-push-backend:
     needs: test-backend
     runs-on: ubuntu-24.04
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
       - name: Login to DockerHub
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
-
-      - name: Build image and push backend
+      - name: Build and push Backend
         uses: docker/build-push-action@v6
         with:
           context: ./simpleapi/simpleapi
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-backend:latest
           push: ${{ github.ref == 'refs/heads/tp-docker' }}
 
-      - name: Build image and push database
+  # Job 3 : Image Database (parallèle)
+  build-push-database:
+    needs: test-backend
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Login to DockerHub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+      - name: Build and push Database
         uses: docker/build-push-action@v6
         with:
           context: ./postgres
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-database:latest
           push: ${{ github.ref == 'refs/heads/tp-docker' }}
 
-      - name: Build image and push httpd
+  # Job 4 : Image HTTPD (parallèle)
+  build-push-httpd:
+    needs: test-backend
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Login to DockerHub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+      - name: Build and push HTTPD
         uses: docker/build-push-action@v6
         with:
           context: ./httpd
