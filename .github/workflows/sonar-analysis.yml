@@ -15,4 +15,4 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
       - name: Sonar Analysis
-        run: mvn -B sonar:sonar -Dsonar.projectKey=elgr3 -Dsonar.organization=elgr3 -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }} --file ./simpleapi/simpleapi/pom.xml
+        run: mvn -B package sonar:sonar -Dsonar.projectKey=elgr3 -Dsonar.organization=elgr3 -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }} -DskipTests --file ./simpleapi/simpleapi/pom.xml
