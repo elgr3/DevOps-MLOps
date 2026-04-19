@@ -1,9 +1,7 @@
 FROM postgres:17.2-alpine
 
-ENV POSTGRES_DB=db \
-   POSTGRES_USER=usr \
-   POSTGRES_PASSWORD=pwd
+# Les variables POSTGRES_DB / POSTGRES_USER / POSTGRES_PASSWORD
+# sont injectées au runtime via le fichier .env (voir docker-compose.yml).
+# Ne JAMAIS les hardcoder ici : l'image Dockerfile est publiée sur DockerHub.
 
-#COPY 01-CreateScheme.sql /docker-entrypoint-initdb.d/
-#COPY InsertData.sql /docker-entrypoint-initdb.d/
 COPY *.sql /docker-entrypoint-initdb.d/

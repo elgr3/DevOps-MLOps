@@ -36,15 +36,15 @@ Les trois services communiquent via un réseau Docker interne (`app-network`). S
 
 ## Configuration
 
-Crée un fichier `.env` à la racine du projet :
+Crée un fichier `.env` à la racine du projet en te basant sur `.env.example` :
 
 ```env
-POSTGRES_USER=usr
-POSTGRES_PASSWORD=motdepasse
-POSTGRES_DB=db
+POSTGRES_USER=<your_user>
+POSTGRES_PASSWORD=<your_password>
+POSTGRES_DB=<your_database>
 ```
 
-> ⚠️ Ne jamais committer ce fichier. Ajoute `.env` à ton `.gitignore`.
+> ⚠️ Ne jamais committer ce fichier. `.env` est déjà dans `.gitignore`.
 
 ---
 

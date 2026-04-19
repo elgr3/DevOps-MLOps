@@ -1,1 +1,7 @@
+# Secrets & environnement local — NE JAMAIS committer
 .env
+.env.*
+!.env.example
+
+# Workspace Claude Code
+.claude/
