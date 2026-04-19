@@ -1,6 +1,6 @@
 # Workflow CD : build et push des images Docker (backend, database, httpd)
 # Déclenché à la fin du workflow "Test Backend" : on ne pousse jamais une
-# image si les tests ont échoué (équivalent moderne du "needs: test-backend").
+# image si les tests ont échoué.
 name: Build and Push Images
 
 on:
@@ -11,31 +11,60 @@ on:
 
 jobs:
   build-and-push:
-    # Garde-fou : uniquement si les tests sont PASSÉS ET qu'on est sur master.
-    # (TP : "le build et push n'ont lieu que sur la branche master")
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'master' }}
+    # Uniquement si les tests passent ET que c'est un push sur master
+    # OU un tag git commençant par "v" (release semver : v1.2.3).
+    if: >-
+      ${{ github.event.workflow_run.conclusion == 'success' &&
+          (github.event.workflow_run.head_branch == 'master' ||
+           startsWith(github.event.workflow_run.head_branch, 'v')) }}
     runs-on: ubuntu-24.04
 
-    # Matrice : un seul job paramétré qui s'exécute 3 fois (un par image).
-    # Évite la duplication de 3 steps "build & push" identiques.
     strategy:
       matrix:
         component: [backend, database, httpd]
 
     steps:
+      # Checkout le commit EXACT qui a été testé (pas le HEAD actuel du
+      # default branch : important sous workflow_run car il y a un décalage possible).
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
-      # Auth DockerHub via secrets (jamais de credentials en clair dans le YAML)
+      # Calcule la liste des tags Docker à produire :
+      # - sha-<7chars>  : traçabilité immuable (toujours)
+      # - latest        : uniquement sur master
+      # - 1.2.3 / 1.2 / 1 : si c'est un tag git semver (v1.2.3)
+      - name: Compute image tags
+        id: tags
+        shell: bash
+        run: |
+          BRANCH="${{ github.event.workflow_run.head_branch }}"
+          SHA_SHORT=$(echo "${{ github.event.workflow_run.head_sha }}" | cut -c1-7)
+          IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-${{ matrix.component }}"
+
+          TAGS="${IMAGE}:sha-${SHA_SHORT}"
+
+          if [[ "$BRANCH" == "master" ]]; then
+            TAGS="${TAGS},${IMAGE}:latest"
+          fi
+
+          # Semver : v1.2.3 produit aussi les tags 1.2.3, 1.2 et 1
+          if [[ "$BRANCH" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            MAJOR="${BASH_REMATCH[1]}"
+            MINOR="${BASH_REMATCH[2]}"
+            PATCH="${BASH_REMATCH[3]}"
+            TAGS="${TAGS},${IMAGE}:${MAJOR}.${MINOR}.${PATCH},${IMAGE}:${MAJOR}.${MINOR},${IMAGE}:${MAJOR}"
+          fi
+
+          echo "tags=${TAGS}" >> "$GITHUB_OUTPUT"
+          echo "Tags calculés : ${TAGS}"
+
       - name: Login to DockerHub
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
 
-      # Build + push de l'image correspondant au composant de la matrice.
-      # Le `context` change selon le composant (chemin du Dockerfile).
       - name: Build and push ${{ matrix.component }}
         uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.component == 'backend' && './simpleapi/simpleapi' || matrix.component == 'database' && './postgres' || './httpd' }}
-          # Push toujours true ici car la condition `if:` du job garantit
-          # déjà qu'on n'arrive là que sur master avec tests verts.
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/tp-devops-${{ matrix.component }}:latest
+          tags: ${{ steps.tags.outputs.tags }}

@@ -6,6 +6,9 @@ on:
   push:
     # Lance les tests sur master (prod) et develop (intégration)
     branches: [master, develop, tp-docker]
+    # Lance aussi sur les tags semver (release) : déclenche ensuite le
+    # workflow de build qui produit les images versionnées.
+    tags: ['v*']
   pull_request:
     branches: [master, develop, tp-docker]
 
