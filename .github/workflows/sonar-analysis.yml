@@ -1,4 +1,8 @@
+# Workflow Qualité : analyse SonarCloud à chaque push sur master.
+# Séparé du workflow de test pour que l'échec d'une analyse qualité
+# ne bloque pas le cycle build/push (décision : feedback qualité != gate bloquant).
 name: SonarCloud Analysis
+
 on:
   push:
     branches: [master]
@@ -8,11 +12,17 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+
+      # JDK 21 (même version que le build principal) + cache Maven
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
           cache: 'maven'
+
+      # Analyse SonarCloud : clé projet/orga + token stocké dans les secrets.
+      # `package` (pas `verify`) pour fournir les classes compilées à Sonar
+      # sans relancer les tests d'intégration (déjà exécutés par Test Backend).
       - name: Sonar Analysis
         run: mvn -B package sonar:sonar -Dsonar.projectKey=elgr3 -Dsonar.organization=elgr3 -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }} -DskipTests --file ./simpleapi/simpleapi/pom.xml
