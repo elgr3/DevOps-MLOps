@@ -1,0 +1,3 @@
+- name: Create bridge network
+  docker_network:
+    name: app-network

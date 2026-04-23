@@ -1,0 +1,9 @@
+---
+# tasks file for roles/docker
+- name: Install required packages
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+# ... la suite de tes tâches ...

@@ -1,0 +1,9 @@
+- name: Run Proxy
+  docker_container:
+    name: my-proxy
+    image: rodyb/tp-devops-httpd:latest
+    networks:
+      - name: app-network
+    ports:
+      - "80:80"
+    restart_policy: always

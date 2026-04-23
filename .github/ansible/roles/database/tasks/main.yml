@@ -1,0 +1,11 @@
+- name: Run Database
+  docker_container:
+    name: postgres-container
+    image: rodyb/tp-devops-database:latest
+    networks:
+      - name: app-network
+    env:
+      POSTGRES_DB: POSTGRES_DB
+      POSTGRES_USER: usr
+      POSTGRES_PASSWORD: pwd
+    restart_policy: always

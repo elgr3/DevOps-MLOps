@@ -1,0 +1,14 @@
+- name: Run Backend App
+  docker_container:
+    name: backend
+    image: rodyb/tp-devops-backend:latest
+    networks:
+      - name: app-network
+    env:
+      DB_HOST: tp-devops-database
+      DB_NAME: POSTGRES_DB
+      DB_USER: POSTGRES_USER
+      DB_PASSWORD: POSTGRES_PASSWORD
+     
+    restart_policy: always
+
