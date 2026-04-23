@@ -68,3 +68,23 @@ jobs:
           context: ${{ matrix.component == 'backend' && './simpleapi/simpleapi' || matrix.component == 'database' && './postgres' || './httpd' }}
           push: true
           tags: ${{ steps.tags.outputs.tags }}
+
+  deploy:
+    needs: build-and-push # S'assure que les images sont prêtes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.ANSIBLE_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 400 ~/.ssh/id_rsa
+
+      - name: Run Ansible Playbook
+        run: |
+          ansible-playbook -i ansible/inventories/setup.yml ansible/playbook.yml \
+          --private-key ~/.ssh/id_rsa \
+          -u admin
+
