@@ -1,6 +1,6 @@
 # Workflow CD : build et push des images Docker (backend, database, httpd)
 # Déclenché à la fin du workflow "Test Backend" : on ne pousse jamais une
-# image si les tests ont échoué.
+# image si les tests ont  échoué.
 name: Build and Push Images
 
 on:
