@@ -83,6 +83,9 @@ jobs:
           chmod 400 ~/.ssh/ma_cle
 
       - name: Run Ansible Playbook
+        env:
+          
+          ANSIBLE_HOST_KEY_CHECKING: False
         run: |
           ansible-playbook -i ansible/inventories/setup.yml ansible/playbook.yml \
           --private-key ~/.ssh/ma_cle \
