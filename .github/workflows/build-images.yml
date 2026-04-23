@@ -79,12 +79,12 @@ jobs:
       - name: Set up SSH key
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.ANSIBLE_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 400 ~/.ssh/id_rsa
+          echo "${{ secrets.ANSIBLE_PRIVATE_KEY }}" > ~/.ssh/ma_cle
+          chmod 400 ~/.ssh/ma_cle
 
       - name: Run Ansible Playbook
         run: |
           ansible-playbook -i ansible/inventories/setup.yml ansible/playbook.yml \
-          --private-key ~/.ssh/id_rsa \
+          --private-key ~/.ssh/ma_cle \
           -u admin
 
