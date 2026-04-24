@@ -2,6 +2,7 @@
   docker_container:
     name: my-proxy
     image: rodyb/tp-devops-httpd:latest
+    pull: true
     networks:
       - name: app-network
     ports:

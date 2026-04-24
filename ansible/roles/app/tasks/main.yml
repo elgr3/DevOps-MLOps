@@ -2,6 +2,7 @@
   docker_container:
     name: backend
     image: rodyb/tp-devops-backend:latest
+    pull: true
     networks:
       - name: app-network
     env:

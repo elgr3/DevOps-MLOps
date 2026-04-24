@@ -2,6 +2,7 @@
   docker_container:
     name: my-front
     image: rodyb/tp-devops-front:latest
+    pull: true
     networks:
       - name: app-network
     restart_policy: always
