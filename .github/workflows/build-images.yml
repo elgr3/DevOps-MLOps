@@ -21,7 +21,7 @@ jobs:
 
     strategy:
       matrix:
-        component: [backend, database, httpd]
+        component: [backend, database, httpd, front]
 
     steps:
       # Checkout le commit EXACT qui a été testé (pas le HEAD actuel du
@@ -65,7 +65,7 @@ jobs:
       - name: Build and push ${{ matrix.component }}
         uses: docker/build-push-action@v6
         with:
-          context: ${{ matrix.component == 'backend' && './simpleapi/simpleapi' || matrix.component == 'database' && './postgres' || './httpd' }}
+          context: ${{ matrix.component == 'backend' && './simpleapi/simpleapi' || matrix.component == 'database' && './postgres' || matrix.component == 'front' && './devops-front-main' || './httpd' }}
           push: true
           tags: ${{ steps.tags.outputs.tags }}
 

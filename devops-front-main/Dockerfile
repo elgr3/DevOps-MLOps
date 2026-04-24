@@ -6,6 +6,7 @@ COPY src/ src/
 COPY public/ public/
 COPY package.json .
 COPY yarn.lock .
+COPY babel.config.js .
 COPY default.conf .
 COPY .env.production .
 
