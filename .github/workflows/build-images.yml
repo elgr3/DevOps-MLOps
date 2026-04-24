@@ -69,25 +69,4 @@ jobs:
           push: true
           tags: ${{ steps.tags.outputs.tags }}
 
-  deploy:
-    needs: build-and-push # S'assure que les images sont prêtes
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.ANSIBLE_PRIVATE_KEY }}" > ~/.ssh/ma_cle
-          chmod 400 ~/.ssh/ma_cle
-
-      - name: Run Ansible Playbook
-        env:
-          
-          ANSIBLE_HOST_KEY_CHECKING: False
-        run: |
-          ansible-playbook -i ansible/inventories/setup.yml ansible/playbook.yml \
-          --private-key ~/.ssh/ma_cle \
-          -u admin
 

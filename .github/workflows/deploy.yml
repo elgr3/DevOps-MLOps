@@ -1,0 +1,50 @@
+# Workflow CD : déploiement Ansible vers la production
+# Déclenché automatiquement après "Build and Push Images", mais requiert
+# une validation manuelle via l'environnement GitHub "production".
+#
+# Prérequis (à faire une seule fois sur GitHub) :
+#   Settings > Environments > New environment > "production"
+#   → Required reviewers : ajoute ton nom (ou l'équipe)
+#   → Save protection rules
+name: Deploy to Production
+
+on:
+  workflow_run:
+    workflows: ["Build and Push Images"]
+    types:
+      - completed
+
+jobs:
+  deploy:
+    # Ne tourne que si le build a réussi sur master ou un tag semver
+    if: >-
+      ${{ github.event.workflow_run.conclusion == 'success' &&
+          (github.event.workflow_run.head_branch == 'master' ||
+           startsWith(github.event.workflow_run.head_branch, 'v')) }}
+    runs-on: ubuntu-latest
+    # L'environnement "production" bloque ici et attend l'approbation manuelle
+    # avant d'exécuter la moindre étape.
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Install Ansible
+        run: pip install ansible
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.ANSIBLE_PRIVATE_KEY }}" > ~/.ssh/ma_cle
+          chmod 400 ~/.ssh/ma_cle
+
+      - name: Run Ansible Playbook
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: False
+        run: |
+          ansible-playbook -i ansible/inventories/setup.yml ansible/playbook.yml \
+            --private-key ~/.ssh/ma_cle \
+            -u admin

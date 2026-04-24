@@ -5,10 +5,8 @@
     networks:
       - name: app-network
     env:
-      DB_HOST: tp-devops-database
-      DB_NAME: POSTGRES_DB
-      DB_USER: POSTGRES_USER
-      DB_PASSWORD: POSTGRES_PASSWORD
-     
+      POSTGRES_DB: db
+      POSTGRES_USER: usr
+      POSTGRES_PASSWORD: pwd
     restart_policy: always
 
