@@ -1,9 +1,56 @@
 ---
-# tasks file for roles/docker
+# 1. Prérequis
 - name: Install required packages
   apt:
     name:
       - apt-transport-https
       - ca-certificates
       - curl
-# ... la suite de tes tâches ...
+      - gnupg
+      - lsb-release
+      - python3-venv
+    state: latest
+    update_cache: yes
+
+# 2. Clé GPG Docker
+- name: Add Docker GPG key
+  apt_key:
+    url: https://download.docker.com/linux/debian/gpg
+    state: present
+
+# 3. Dépôt Docker
+- name: Add Docker APT repository
+  apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/debian {{ ansible_facts['distribution_release'] }} stable"
+    state: present
+    update_cache: yes
+
+# 4. Installation Docker
+- name: Install Docker
+  apt:
+    name: docker-ce
+    state: present
+
+# 5. Python et Pip
+- name: Install Python3 and pip3
+  apt:
+    name:
+      - python3
+      - python3-pip
+    state: present
+
+# 6. Environnement virtuel pour Docker SDK
+- name: Create a virtual environment for Docker SDK
+  command: python3 -m venv /opt/docker_venv
+  args:
+    creates: /opt/docker_venv
+
+# 7. Installation du SDK Docker dans le venv
+- name: Install Docker SDK for Python in virtual environment
+  command: /opt/docker_venv/bin/pip install docker
+
+# 8. Démarrage du service
+- name: Make sure Docker is running
+  service:
+    name: docker
+    state: started

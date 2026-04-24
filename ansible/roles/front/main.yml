@@ -1,0 +1,7 @@
+- name: Run Front-end
+  docker_container:
+    name: my-front
+    image: ton_pseudo_dockerhub/tp-devops-front:latest
+    networks:
+      - name: app-network
+    restart_policy: always
