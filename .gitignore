@@ -2,6 +2,8 @@
 .env
 .env.*
 !.env.example
+# Le .env.production du front ne contient pas de secrets (juste l'URL du domaine)
+!devops-front-main/.env.production
 
 # Workspace Claude Code
 .claude/
